@@ -36,15 +36,24 @@ function sendToSDWS(data) {
 
     const dataJson = typeof data === 'string' ? JSON.parse(data) : data;
     // auto-detect button context from button location
-    if (!dataJson.context && dataJson.buttonLocation) {        
-      const device = Object.keys(buttonLocations).find(device => {
-        return buttonLocations[device][dataJson.buttonLocation.row][dataJson.buttonLocation.column]
+    if (!dataJson.context && dataJson.buttonLocation) {    
+      const deviceIds = Object.keys(buttonLocations)
+      const {row, column} = dataJson.buttonLocation
+      const activeDevices = deviceIds.filter(d => {
+        return buttonLocations[d][row][column]
       })
 
-      dataJson.context = buttonLocations[device][dataJson.buttonLocation.row][dataJson.buttonLocation.column].context
-      dataJson.buttonLocation = undefined
+      activeDevices.forEach(d => {
+        this.sdWS.send(JSON.stringify({
+          ...dataJson,
+          device: d,
+          context: buttonLocations[d][row][column].context
+        }))
+      })
+      return
     }
 
+    // fallback
     this.sdWS.send(JSON.stringify(dataJson));
   }
 }
