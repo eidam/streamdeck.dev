@@ -1,0 +1,15 @@
+name = "streamdeck-dev"
+main = "src/index.ts"
+compatibility_date = "2022-04-24"
+
+account_id = "aa42210e0c67be181cdaba459a424173"
+
+[durable_objects]
+bindings = [
+  { name = "DOG_GROUP", class_name = "DogGroup" },
+  { name = "DOG_REPLICA", class_name = "DogReplica" },
+]
+
+[[migrations]]
+tag = "v1" # Should be unique for each entry
+new_classes = ["DogGroup", "DogReplica"] # Array of new classes
