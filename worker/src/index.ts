@@ -18,9 +18,9 @@ export default {
     // handle WebSocket requests by DOG
     if (request.headers.get("upgrade") === "websocket") {
       // reqid identifies a user
-      let reqid = "anon"
+      let reqid = crypto.randomUUID() || "anon"
 
-      // gid would be stream interface id
+      // gid would be hosted stream interface id
       let gid = env.DOG_GROUP.idFromName('homepage');
   
       let group = await dog.identify(gid, reqid, {
@@ -31,8 +31,15 @@ export default {
       return group.fetch(request);
     }
 
-    // serve HTML otherwise
-    return new Response(indexHtml, {
+    // serve HTML interface otherwise
+    const type = url.searchParams.get("type")
+    let format = ""
+    switch (type) {
+      case "r3c5": format = "r3c5"; break;
+      case "r2c3": format = "r2c3"; break;
+      default: format = "r4c8";
+    }
+    return new Response(indexHtml.replaceAll("__FORMAT__", format), {
       headers: {
         "content-type": "text/html"
       }

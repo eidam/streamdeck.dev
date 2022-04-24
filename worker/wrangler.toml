@@ -2,7 +2,8 @@ name = "streamdeck-dev"
 main = "src/index.ts"
 compatibility_date = "2022-04-24"
 
-account_id = "aa42210e0c67be181cdaba459a424173"
+account_id = "fbbebdb1eed350f2a05f517e1d80915f"
+routes = ["streamdeck.dev/*"]
 
 [durable_objects]
 bindings = [

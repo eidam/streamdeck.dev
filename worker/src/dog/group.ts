@@ -2,7 +2,7 @@ import { Group } from 'dog';
 import { Env } from '..';
 
 export class DogGroup extends Group<Env> {
-	limit = 10; // max conns per REPLICA stub
+	limit = 50; // max conns per REPLICA stub
 
 	link(env: Env) {
 		return {

@@ -36,9 +36,9 @@ function sendToSDWS(data) {
 
     const dataJson = typeof data === 'string' ? JSON.parse(data) : data;
     // auto-detect button context from button location
-    if (!dataJson.context && dataJson.buttonLocation) {    
+    if (!dataJson.context && dataJson.coordinates) {    
       const deviceIds = Object.keys(buttonLocations)
-      const {row, column} = dataJson.buttonLocation
+      const {row, column} = dataJson.coordinates
       const activeDevices = deviceIds.filter(d => {
         return buttonLocations[d][row][column]
       })

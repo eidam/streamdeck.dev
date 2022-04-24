@@ -4,10 +4,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+      html, body {
+        /* background-color: black; */
+        font-family: "Roboto",arial,sans-serif;
+        display: grid;
+        place-items: center center;
+        background: #616161;
+        min-height: 100vh;
+      }
 
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      img {
+        margin: 2rem auto;
+        max-height: 150px;
+      }
+
+      main.streamdeck {
+        display: flex;
+        flex-direction: column;
+      }
+
+      section {
+        position: relative;
+        box-shadow: 0 5px 35px rgb(9, 22, 29);
+        background: rgb(9, 22, 29);
+        height: 300px;
+        width: 650px;
+        padding: 7rem 4rem 4rem 4rem;
+        display: grid;
+        gap: 1rem;
+        border-radius: 15px;
+        grid-auto-rows: 1fr;
+      }
+
+      section.r4c8 {
+        grid-template-columns: repeat(8, 1fr);
+      }
+
+      section.r3c5 {
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      section.r2c3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      section::after {
+          background-image: url(https://www.elgato.com/sites/default/files/2018-10/product_logo_streamdeck.png);
+          content: "";
+          display: block;
+          position: absolute;
+          left: 24%;
+          top: 7.5px;
+          margin: 0 auto;
+          height: 82px;
+          width: 393px;
+          transform: scale(0.8)
+      }
+
+      button {
+        cursor: pointer;
+        border-radius: 15px;
+        color: white;
+        background-color: rgb(16, 39, 51);
+        font-size: 0.7rem;
+        transition: all 250ms;
+        box-shadow: 0 5px 35px rgb(9, 22, 29);
+        overflow: hidden;
+      }
     </style>
   </head>
 
   <body>
+   
+      <main class="streamdeck">
+        <section class="__FORMAT__" x-data="getlayout">
+          <template x-for="b in buttons" :key="b">
+            <button @click="keyUp(b)" :id="'b_' + b" x-intersect.once="fetchButton(b)">&nbsp;</button>
+          </template>
+        </section>
+      </main>
+
+      <script type="module">
+        import Sockette from 'https://unpkg.com/sockette@2.0.6/dist/sockette.mjs';
+        import QuickLRU from 'https://cdn.jsdelivr.net/npm/quick-lru@6.1.1/index.js';
+        import intersect from 'https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.10.2/dist/module.esm.js';
+        import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.10.2/dist/module.esm.js';
+
+        var layout = Alpine.reactive("__FORMAT__")
+        var buttons = Alpine.reactive([])
+
+        Alpine.plugin(intersect)
+        Alpine.data('getlayout', () => ({
+          layout,
+          buttons,
+          fetchButton(b) {
+            const row = parseInt(b[0])
+            const column = parseInt(b[2])
+            sendMessage({
+              event: "willAppear",
+              payload: {coordinates: {row, column}}
+            })
+          },
+          keyUp(b) {
+            const row = parseInt(b[0])
+            const column = parseInt(b[2])
+            sendMessage({
+              event: "keyUp",
+              payload: {coordinates: {row, column}}
+            })
+          }
+        }))
+
+        Alpine.start()
+      
+        function refreshButtons(l) {
+          const rows = parseInt(l[1])
+          const columns = parseInt(l[3])
+          buttons.length = 0
+          Array(rows).fill(0).forEach((_, r) => {
+            Array(columns).fill(0).forEach((_, c) => {
+              buttons.push(`${r}_${c}`)
+            })
+          })
+        }
+
+        function onopen(ev) {
+          refreshButtons(layout)
+          console.log('[ws][open]', ev);
+        }
+
+        function onmessage(ev) {
+          let data = JSON.parse(ev.data);
+          
+          switch (data.event) {
+            case "setTitle": {
+              const button = document.getElementById(`b_${data.coordinates.row}_${data.coordinates.column}`)
+              button.innerText = data.payload.title
+              return
+            }
+
+            case "setImage": {
+              const button = document.getElementById(`b_${data.coordinates.row}_${data.coordinates.column}`)
+              button.style = `background: url(${data.payload.image}) no-repeat; background-size: cover;`
+              return
+            }
+            
+            case "openUrl": {
+              window.open(data.payload.url, '_blank').focus()
+              return
+            }
+          }
+        }
+
+        function onclose(ev) {
+          console.log('[ws][%s]', ev.type, ev);
+        }
+
+        function onerror(ev) {
+          console.log('[ws][%s]', ev.type, ev);
+        }        
+
+        var origin = location.origin.replace(/^http/, 'ws');
+        //origin = "wss://stream.eidam.cf"
+        var ws = new Sockette(`${origin}/ws`, {
+          timeout: 3e3,
+          onopen, onmessage, onclose, onerror,
+          onreconnect: e => console.log('Reconnecting...', e),
+          onmaximum: e => console.log('Stop Attempting!', e),
+        });
+
+        function sendMessage(data={}) {
+          const msg = {type: "rawSD", data}
+          ws.json(msg);
+        }
+
+        // client ping <-> server pong
+        setInterval(() => {
+          try {
+            const id = self.crypto.randomUUID()
+            lru.set(id, Date.now())
+            toJSON('ping', { id })
+          } catch (e) {}
+        }, 1000)
+      </script>
   </body>
 </html>
