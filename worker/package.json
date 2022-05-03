@@ -10,7 +10,7 @@
   "scripts": {
     "start": "wrangler dev",
     "publish": "wrangler publish",
-    "local": "wrangler dev --local",
+    "local": "wrangler dev --local"
   },
   "dependencies": {
     "dog": "^1.1.3"
