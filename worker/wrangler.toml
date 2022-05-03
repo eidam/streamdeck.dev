@@ -3,7 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2022-04-24"
 
 account_id = "fbbebdb1eed350f2a05f517e1d80915f"
+workers_dev = true
 routes = ["streamdeck.dev/*"]
+
+kv_namespaces = [
+  { binding = "KV_BUTTONS", id = "8fdc347a12c84c33a2d7f281999623dd", preview_id = "xy" }
+]
 
 [durable_objects]
 bindings = [

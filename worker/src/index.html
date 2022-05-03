@@ -43,14 +43,17 @@
 
       section.r4c8 {
         grid-template-columns: repeat(8, 1fr);
+        font-size: 0.7rem !important;
       }
 
       section.r3c5 {
         grid-template-columns: repeat(5, 1fr);
+        font-size: 1rem !important;
       }
 
       section.r2c3 {
         grid-template-columns: repeat(3, 1fr);
+        font-size: 1.7rem !important;
       }
 
       section::after {
@@ -71,10 +74,10 @@
         border-radius: 15px;
         color: white;
         background-color: rgb(16, 39, 51);
-        font-size: 0.7rem;
         transition: all 250ms;
         box-shadow: 0 5px 35px rgb(9, 22, 29);
         overflow: hidden;
+        font-size: inherit;
       }
     </style>
   </head>
@@ -170,8 +173,9 @@
         }        
 
         var origin = location.origin.replace(/^http/, 'ws');
+        var pathname = location.pathname
         //origin = "wss://stream.eidam.cf"
-        var ws = new Sockette(`${origin}/ws`, {
+        var ws = new Sockette(`${origin}${pathname}`, {
           timeout: 3e3,
           onopen, onmessage, onclose, onerror,
           onreconnect: e => console.log('Reconnecting...', e),

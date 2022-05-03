@@ -7,30 +7,39 @@ export { DogReplica } from './dog/replica'
 import indexHtml from "./index.html"
 
 export type Env = {
-  DOG_GROUP: DurableObjectNamespace & dog.Group<Env>,
+  KV_BUTTONS: KVNamespace
+  DOG_GROUP: DurableObjectNamespace & dog.Group<Env>
   DOG_REPLICA: DurableObjectNamespace & dog.Replica<Env>
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx:ExecutionContext): Promise<Response> {
     const url = new URL(request.url)
+    const streamDeckId = url.pathname.substring(1)
+
+    // redirect to a new Stream Deck ID for /new
+    if (streamDeckId == "new") {
+      return Response.redirect(`${url.protocol}//${url.hostname}:${url.port}/${env.DOG_GROUP.newUniqueId().toString()}`)
+    }
 
     // handle WebSocket requests by DOG
-    if (request.headers.get("upgrade") === "websocket") {
-      // reqid identifies a user
-      let reqid = crypto.randomUUID() || "anon"
+    if (request.headers.get("upgrade") === "websocket" || ["POST", "PATCH"].includes(request.method)) {
+      // reqid identifies a user, we can use UUIDv4 for each connection
+      let reqid = crypto.randomUUID()
 
-      // gid would be hosted stream interface id
-      let gid = env.DOG_GROUP.idFromName('homepage');
-  
+      let gid = streamDeckId ? env.DOG_GROUP.idFromString(streamDeckId) : env.DOG_GROUP.idFromName('homepage');
+      console.log(streamDeckId, gid.toString())
       let group = await dog.identify(gid, reqid, {
         parent: env.DOG_GROUP,
         child: env.DOG_REPLICA,
       });
   
-      return group.fetch(request);
+      return group.fetch(`http://internal/${gid.toString()}`, request);
     }
 
+    if (request.headers.get("accept")?.includes("text/html")) {
+      ctx.waitUntil(incrementCounter(env))
+    }
     // serve HTML interface otherwise
     const type = url.searchParams.get("type")
     let format = ""
@@ -45,4 +54,10 @@ export default {
       }
     })
   }
+}
+
+async function incrementCounter(env:Env) {
+  // @ts-ignore
+  await fetch("https://streamdeck-proxy.eidamd.workers.dev")
+  return
 }
