@@ -4,12 +4,13 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^3.7.1",
     "typescript": "^4.6.3",
-    "wrangler": "0.0.26"
+    "wrangler": "alpha"
   },
   "private": true,
   "scripts": {
     "start": "wrangler dev",
-    "publish": "wrangler publish"
+    "publish": "wrangler publish",
+    "local": "wrangler dev --local",
   },
   "dependencies": {
     "dog": "^1.1.3"
